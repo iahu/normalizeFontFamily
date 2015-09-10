@@ -1,12 +1,18 @@
 var fs = require('fs');
-
+var deepCount = 0;
+var overflow = false;
 module.exports = function dir(path, filter, deep) {
 	var exists = fs.existsSync(path);
-	if (path.substr(-1) !== '/') path += '/';
 	if ( !exists ) {
 		throw new Error(path + ' not found.');
 	}
 	filter = typeof filter === 'function'? filter : function(){};
+	if ( fs.statSync(path).isFile() ) {
+		filter(path);
+		return;
+	}
+	// directory path normalize
+	if (path.substr(-1) !== '/') path += '/';
 	fs.readdir(path, function(err, files){
 		if (err) {
 			throw err;
@@ -14,6 +20,10 @@ module.exports = function dir(path, filter, deep) {
 		// console.log('\nscaning "'+ path);
 		if (files && files.length < 0) {
 			return;
+		}
+		for (var i = 0; i < files.length; i++) {
+			var file = files[i];
+
 		}
 		files.forEach(function (file) {
 			var subPath = path + file;
@@ -30,7 +40,18 @@ module.exports = function dir(path, filter, deep) {
 				} else {
 					// console.log(subPath+'is directory');
 					if (deep) {
-						// console.log('goto '+ subPath);
+						if (typeof deep === 'number') {
+							if (overflow) {
+								return;
+							}
+							if (deepCount > deep) {
+								console.log('overflow the max deep number: ['+ deep + ']');
+								overflow = true;
+								return;
+							}
+						}
+						deepCount += 1;
+						console.log('\ngoto directory:\n'+ subPath);
 						dir(subPath + '/', filter, deep);
 					}
 				}
