@@ -1,5 +1,5 @@
 ##安装方法
-npm install normalizeFontFamily
+npm install normalize-font-family
 
 ##使用说明
 
