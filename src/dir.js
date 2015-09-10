@@ -21,10 +21,6 @@ module.exports = function dir(path, filter, deep) {
 		if (files && files.length < 0) {
 			return;
 		}
-		for (var i = 0; i < files.length; i++) {
-			var file = files[i];
-
-		}
 		files.forEach(function (file) {
 			var subPath = path + file;
 			if ( !fs.existsSync(subPath) ) {console.log(file + ' not fount.');return;}
@@ -45,7 +41,7 @@ module.exports = function dir(path, filter, deep) {
 								return;
 							}
 							if (deepCount > deep) {
-								console.log('overflow the max deep number: ['+ deep + ']');
+								console.log('\x1b[36m%s\x1b[0m', 'overflow the max deep number: ['+ deep + ']\nexited');
 								overflow = true;
 								return;
 							}
