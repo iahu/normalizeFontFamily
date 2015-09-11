@@ -1,12 +1,14 @@
 var fs = require('fs');
 var deepCount = 0;
 var overflow = false;
-module.exports = function dir(path, filter, deep) {
+module.exports = function dir(path, option) {
 	var exists = fs.existsSync(path);
+	var deep = option.deep || false,
+		searchHiddenFile = option.searchHiddenFile || false,
+		filter = option.callback || function(){};
 	if ( !exists ) {
 		throw new Error(path + ' not found.');
 	}
-	filter = typeof filter === 'function'? filter : function(){};
 	if ( fs.statSync(path).isFile() ) {
 		filter(path);
 		return;
@@ -17,7 +19,6 @@ module.exports = function dir(path, filter, deep) {
 		if (err) {
 			throw err;
 		}
-		// console.log('\nscaning "'+ path);
 		if (files && files.length < 0) {
 			return;
 		}
@@ -28,20 +29,17 @@ module.exports = function dir(path, filter, deep) {
 				if (err) {
 					throw err;
 				}
-				// console.log(file ,'is file?', stat.isFile());
 
 				if (stat.isFile()) {
-					// console.log(subPath+' is file');
 					filter(subPath);
 				} else {
-					// console.log(subPath+'is directory');
 					if (deep) {
 						if (typeof deep === 'number') {
 							if (overflow) {
 								return;
 							}
 							if (deepCount > deep) {
-								console.log('\x1b[36m%s\x1b[0m', 'overflow the max deep number: ['+ deep + ']\nexited');
+								console.log('\x1b[36m%s\x1b[0m', 'overflow maximum dir depth: ['+ deep + ']\nexited');
 								overflow = true;
 								return;
 							}

@@ -1,7 +1,8 @@
 var fs = require('fs');
-var replaceString = require('./src/replaceString');
+var findInFile = require('./src/findInFile');
+var replaceString = require('./src/replaceStringInFile');
 var dir = require('./src/dir.js');
-var ffPartten = /(font-family\s?:)(.+)?([;}]?)/g;
+var ffPttern = /(font-family\s?:)(.+)?([;}]?)/g;
 var argvs = process.argv.slice(2);
 var deep = true;
 var firstArg, lastArg;
@@ -15,14 +16,19 @@ if (argvs.length > 0) {
 			deep = +argvs.pop();
 		}
 	}
-	argvs.forEach(function(filename){
-		dir(filename, function(fname){
-			if ( fname.split('.').pop() !== 'css' ) {
-				return;
+	argvs.forEach(function(path){
+		findInFile({
+			path: path,
+			search: ffPttern,
+			replace: replaceFunction,
+			fileType: 'css',
+			callback: function (err, data) {
+				if (err) {
+					console.log('[failed] ' + data.filename);
+				}
+				console.log('[ok] ' + data.filename);
 			}
-			// console.log(fname);
-			replaceFile(fname);
-		}, deep);
+		});
 	});
 } else {
 	console.log('\x1b[36m%s\x1b[0m', '\n=======替换 font-family属性值 脚本=======\n');
@@ -43,15 +49,4 @@ function replaceFunction (a,b,c,d) {
 		return string;
 	});
 	return b + arr.toString() + d + ';';
-}
-
-function replaceFile (filename) {
-	console.log(filename +' processing.');
-	replaceString(filename, ffPartten, replaceFunction, function (err) {
-		if (err) {
-			console.log(filename+' processing failed');
-		} else{
-			console.log(filename+ ' processing successed');
-		}
-	});
 }
