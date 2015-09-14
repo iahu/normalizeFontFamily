@@ -1,8 +1,8 @@
 var fs = require('fs');
-var findInFile = require('./src/findInFile');
-var replaceString = require('./src/replaceStringInFile');
-var dir = require('./src/dir.js');
-var ffPttern = /(font-family\s?:)(.+)?([;}]?)/g;
+var findInFile = require('./lib/findInFile');
+var replaceString = require('./lib/replaceStringInFile');
+var dir = require('./lib/dir.js');
+var ffPttern = /(font-family\s?:)([^;!]+)?/g;
 var argvs = process.argv.slice(2);
 var deep = true;
 var firstArg, lastArg;
@@ -14,6 +14,7 @@ if (argvs.length > 0) {
 		if (/^\d+$/.test(lastArg) && !fs.exists(lastArg)) {
 			// get deep argument
 			deep = +argvs.pop();
+			console.log('\x1b[36m%s\x1b[0m', 'maximum dir depth: ['+ deep + ']\n');
 		}
 	}
 	argvs.forEach(function(path){
@@ -21,7 +22,8 @@ if (argvs.length > 0) {
 			path: path,
 			search: ffPttern,
 			replace: replaceFunction,
-			fileType: 'css',
+			fileType: /(css|less|scss)/,
+			deep: deep,
 			callback: function (err, data) {
 				if (err) {
 					console.log('[failed] ' + data.filename);
@@ -48,5 +50,5 @@ function replaceFunction (a,b,c,d) {
 		}
 		return string;
 	});
-	return b + arr.toString() + d + ';';
+	return b + arr.toString();
 }
