@@ -2,7 +2,7 @@ var fs = require('fs');
 var findInFile = require('./lib/findInFile');
 var replaceString = require('./lib/replaceStringInFile');
 var dir = require('./lib/dir.js');
-var ffPttern = /(font-family\s?:)([^;!]+)?/g;
+var ffPttern = /(font-family\s?:)([^;!}]+)?/g;
 var argvs = process.argv.slice(2);
 var deep = true;
 var firstArg, lastArg;
