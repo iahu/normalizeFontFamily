@@ -1,6 +1,6 @@
 {
   "name": "normalize-font-family",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "normalize font-family value. Build to fix less parse error",
   "main": "index.js",
   "scripts": {
