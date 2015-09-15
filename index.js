@@ -1,38 +1,45 @@
 var fs = require('fs');
-var findInFile = require('./lib/findInFile');
-var replaceString = require('./lib/replaceStringInFile');
+var nativePath = require('path');
 var dir = require('./lib/dir.js');
-var ffPttern = /(font-family\s?:)([^;!}]+)?/g;
+var fileType = /^(css|less|scss)$/;
 var argvs = process.argv.slice(2);
 var deep = true;
+function addQuotationMation (str) {
+	var arr = str.split(',');
+	arr = arr.map(function(string){
+		string = string.trim();
+		// if ( ! /('|")/g.test(string) ) {
+		// 	string = string.replace(/(.+)(;?)/g, '"$1"$2'); // '"'+ string + '"';
+		// }
+		if ( /^[^a-zA-z-'"]+/g.test(string) ) {
+			string = string.replace(/(.+)(;?)/g, '"$1"$2'); // '"'+ string + '"';
+		}
+		return string;
+	});
+	return arr.join(',');
+}
 var firstArg, lastArg;
+var replacements = [
+	{
+		search: /(font-family\s?:)([^;!}]+)?/g,
+		replace: function replaceFunction (a,b,c,d) {
+			var str = c.replace(/\s?:\s/, '').replace(/\s?;\s?/, '');
 
-if (argvs.length > 0) {
-	if (argvs.length === 2) {
-		firstArg = argvs[0];
-		lastArg = argvs[argvs.length-1];
-		if (/^\d+$/.test(lastArg) && !fs.exists(lastArg)) {
-			// get deep argument
-			deep = +argvs.pop();
-			console.log('\x1b[36m%s\x1b[0m', 'maximum dir depth: ['+ deep + ']\n');
+			return b + addQuotationMation(str).toString();
+		}
+	},
+	{
+		search: /(font\s?:)([^;!}]+)?/g,
+		replace: function (a, b, c) {
+			var arr = c.split(/\s/g);
+			var ff = arr.pop();
+			ff = addQuotationMation(ff);
+			arr.push(ff);
+			return b + arr.join(' ');
 		}
 	}
-	argvs.forEach(function(path){
-		findInFile({
-			path: path,
-			search: ffPttern,
-			replace: replaceFunction,
-			fileType: /(css|less|scss)/,
-			deep: deep,
-			callback: function (err, data) {
-				if (err) {
-					console.log('[failed] ' + data.filename);
-				}
-				console.log('[ok] ' + data.filename);
-			}
-		});
-	});
-} else {
+];
+if (argvs.length === 0) {
 	console.log('\x1b[36m%s\x1b[0m', '\n=======替换 font-family属性值 脚本=======\n');
 	console.log('          ---使用说明---\n'+
 		'替换单个文件：node index.js a.css\n'+
@@ -41,14 +48,48 @@ if (argvs.length > 0) {
 		'指定遍历层级：node index.js . 2\n');
 }
 
-function replaceFunction (a,b,c,d) {
-	var arr = c.replace(/\s?:\s/, '').replace(/\s?;\s?/, '').split(',');
-	arr = arr.map(function(string){
-		string = string.trim();
-		if ( ! /('|")/g.test(string) ) {
-			string = string.replace(/(.+)(;?)/g, '"$1"$2'); // '"'+ string + '"';
-		}
-		return string;
+
+if (argvs.length === 2) {
+	firstArg = argvs[0];
+	lastArg = argvs[argvs.length-1];
+	if (/^\d+$/.test(lastArg) && !fs.exists(lastArg)) {
+		// get deep argument
+		deep = +argvs.pop();
+		console.log('\x1b[36m%s\x1b[0m', 'maximum dir depth: ['+ deep + ']\n');
+	}
+}
+argvs.forEach(function(path){
+	dir(path, {
+		callback: function (fname) {
+			var ext = nativePath.extname(fname).substr(1);
+			if ( !fileType.test( ext ) ) {
+				return;
+			}
+			replaceFile(fname, replacements);
+		},
+		deep: deep,
+		searchHiddenFile: false
 	});
-	return b + arr.toString();
+});
+
+function replaceFile(fname, replacements){
+	fs.readFile(fname, function (err, data) {
+		if (err) {
+			throw err;
+		}
+		data = data.toString();
+		for (var i = 0; i < replacements.length; i++) {
+			var r = replacements[i];
+			if (r.search && r.replace) {
+				data = data.replace(r.search, r.replace);
+			}
+			// replaceString(fname, r.search, r.replace, callback);
+		}
+
+		fs.writeFile(fname, data, function(err){
+			if (err) {
+				throw err;
+			}
+		});
+	});
 }
