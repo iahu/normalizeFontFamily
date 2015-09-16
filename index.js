@@ -1,23 +1,9 @@
 var fs = require('fs');
-var nativePath = require('path');
-var dir = require('./lib/dir.js');
-var fileType = /^(css|less|scss)$/;
+var jschardet = require("jschardet");
+var deepDir = require('./lib/deepDir.js');
 var argvs = process.argv.slice(2);
-var deep = true;
-function addQuotationMation (str) {
-	var arr = str.split(',');
-	arr = arr.map(function(string){
-		string = string.trim();
-		// if ( ! /('|")/g.test(string) ) {
-		// 	string = string.replace(/(.+)(;?)/g, '"$1"$2'); // '"'+ string + '"';
-		// }
-		if ( /^[^a-zA-z-'"]+/g.test(string) ) {
-			string = string.replace(/(.+)(;?)/g, '"$1"$2'); // '"'+ string + '"';
-		}
-		return string;
-	});
-	return arr.join(',');
-}
+var depth = 0;
+var infoPrefix = '\x1b[33m[info] \x1b[0m';
 var firstArg, lastArg;
 var replacements = [
 	{
@@ -25,22 +11,22 @@ var replacements = [
 		replace: function replaceFunction (a,b,c,d) {
 			var str = c.replace(/\s?:\s/, '').replace(/\s?;\s?/, '');
 
-			return b + addQuotationMation(str).toString();
+			return b + addQuote(str).toString();
 		}
 	},
 	{
-		search: /(font\s?:)([^;!}]+)?/g,
-		replace: function (a, b, c) {
-			var arr = c.split(/\s/g);
+		search: /([^a-zA-Z-\s'"])(font\s?:)([^;!}]+)?/g,
+		replace: function (a, b, c, d) {
+			var arr = d.split(/\s/g);
 			var ff = arr.pop();
-			ff = addQuotationMation(ff);
+			ff = addQuote(ff);
 			arr.push(ff);
-			return b + arr.join(' ');
+			return b + c + arr.join(' ');
 		}
 	}
 ];
 if (argvs.length === 0) {
-	console.log('\x1b[36m%s\x1b[0m', '\n=======替换 font-family属性值 脚本=======\n');
+	console.log('\x1b[31m'+ '\n=======替换 font-family属性值 脚本=======\x1b[0m');
 	console.log('          ---使用说明---\n'+
 		'替换单个文件：node index.js a.css\n'+
 		'替换多个文件：node index.js a.css b.css\n'+
@@ -52,44 +38,80 @@ if (argvs.length === 0) {
 if (argvs.length === 2) {
 	firstArg = argvs[0];
 	lastArg = argvs[argvs.length-1];
-	if (/^\d+$/.test(lastArg) && !fs.exists(lastArg)) {
-		// get deep argument
-		deep = +argvs.pop();
-		console.log('\x1b[36m%s\x1b[0m', 'maximum dir depth: ['+ deep + ']\n');
+	if (/^\d+$/.test(lastArg) && !fs.existsSync(lastArg)) {
+		depth = +argvs.pop();
+		console.log(infoPrefix+'最大遍历深度：'+ depth);
 	}
 }
+
 argvs.forEach(function(path){
-	dir(path, {
-		callback: function (fname) {
-			var ext = nativePath.extname(fname).substr(1);
-			if ( !fileType.test( ext ) ) {
-				return;
-			}
-			replaceFile(fname, replacements);
+	deepDir(path, {
+		filters: {
+			'.css' : cssFilter,
+			'.scss': cssFilter,
+			'.less': cssFilter
 		},
-		deep: deep,
-		searchHiddenFile: false
+		depth: depth
 	});
 });
 
-function replaceFile(fname, replacements){
+function cssFilter(fname){
+	console.log(infoPrefix+'正在处理:', fname);
 	fs.readFile(fname, function (err, data) {
 		if (err) {
 			throw err;
 		}
-		data = data.toString();
+		var encoding = jschardet.detect(data).encoding;
+		if (['UTF-8', 'ascii'].indexOf(encoding) < 0) {
+			// console.log(infoPrefix+'未处理'+fname+'，文件编码:', encoding);
+			encoding = 'utf8';
+			return;
+		}
+		if (encoding === 'UTF-8') {
+			encoding = 'utf8';
+		}
+		var originalData = data = data.toString(encoding);
 		for (var i = 0; i < replacements.length; i++) {
 			var r = replacements[i];
-			if (r.search && r.replace) {
-				data = data.replace(r.search, r.replace);
-			}
-			// replaceString(fname, r.search, r.replace, callback);
+			data = data.replace(r.search, r.replace);
 		}
-
-		fs.writeFile(fname, data, function(err){
+		if (data === originalData) {
+			return;
+		}
+		fs.writeFile(fname, data, encoding, function(err){
 			if (err) {
-				throw err;
+				console.log(err);
+				// throw err;
 			}
 		});
 	});
+}
+
+function addQuote (str) {
+	var arr = str.split(',');
+	arr = arr.map(function(string){
+		var matchs = string.match(/(\s?)(.+)(;?\s?)/);
+		var str = string.trim();
+		if ( ! quoted(str) && ! keyword(str) && !dimension(str) ) {
+			str = str.replace(/(.+)(;?)/g, '"$1"$2');
+			// str = '"'+ str + '"';
+			if (matchs) {
+				return matchs[1]+ str + matchs[3];
+			}
+			return str;
+		}
+		return string;
+	});
+	return arr.join(',');
+}
+
+function quoted (string) {
+	return /['"]([^'"]+)['"]/.test(string);
+	// return /^"((?:[^"\\\r\n]|\\.)*)"|'((?:[^'\\\r\n]|\\.)*)'/.test(string);
+}
+function keyword (string) {
+	return /^%|^[_A-Za-z-][_A-Za-z0-9-]*/.test(string);
+}
+function dimension (string) {
+	return /^([+-]?\d*\.?\d+)(%|[a-z]+)?/.test(string);
 }
