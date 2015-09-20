@@ -1,12 +1,24 @@
-##安装方法
-npm install normalize-font-family
+## 功能
+less在使用中文字体名时没加绰号，less编译会报错。
+解决方法：
+	1. 可以个性less库的parse.js下keyword里面的正则。
+		// k = $re(/^%|^[_A-Za-z-][_A-Za-z0-9-]*/);
+		k = $re(/^%|^[\u4e00-\u9fa5_A-Za-z-][\u4e00-\u9fa5_A-Za-z0-9-]*/);
+	2. 手动的添加引号
 
-##使用说明
+这就是一个基于node做的批量给less/scss/css文件中文字体名添加引号的工具。
 
-替换单个文件：`node index.js a.css`
+## 安装方法
+npm install normalize-font-family -g
 
-替换多个文件：`node index.js a.css b.css`
+## 使用说明
 
-遍历某文件夹：`node index.js .`
+查看使用方法：`nff`
 
-指定遍历层级：`node index.js . 2`
+替换单个文件：`nff a.css`
+
+替换多个文件：`nff a.css b.css`
+
+遍历某文件夹：`nff .`
+
+指定遍历层级：`nff . 2`

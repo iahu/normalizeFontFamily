@@ -1,3 +1,5 @@
+#! /usr/bin/env node
+
 var fs = require('fs');
 var jschardet = require("jschardet");
 var deepDir = require('./lib/deepDir.js');
@@ -26,12 +28,14 @@ var replacements = [
 	}
 ];
 if (argvs.length === 0) {
-	console.log('\x1b[31m'+ '\n=======替换 font-family属性值 脚本=======\x1b[0m');
-	console.log('          ---使用说明---\n'+
-		'替换单个文件：node index.js a.css\n'+
-		'替换多个文件：node index.js a.css b.css\n'+
-		'遍历某文件夹：node index.js .\n'+
-		'指定遍历层级：node index.js . 2\n');
+	console.log('\n\n==================== nff =====================\n');
+	console.log('批量给less/scss/css文件中文字体名添加引号的工具\n');
+	console.log('---使用说明---\n'+
+		' 查看使用方法：nff\n'+
+		' 替换单个文件：nff a.css\n'+
+		' 替换多个文件：nff a.css b.css\n'+
+		' 遍历某文件夹：nff .\n'+
+		' 指定遍历层级：nff . 2\n');
 }
 
 
