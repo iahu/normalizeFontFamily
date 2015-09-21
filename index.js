@@ -69,7 +69,7 @@ function cssFilter(fname){
 		if (['UTF-8', 'ascii'].indexOf(encoding) < 0) {
 			// console.log(infoPrefix+'未处理'+fname+'，文件编码:', encoding);
 			encoding = 'utf8';
-			return;
+			// return;
 		}
 		if (encoding === 'UTF-8') {
 			encoding = 'utf8';
@@ -96,7 +96,7 @@ function addQuote (str) {
 	arr = arr.map(function(string){
 		var matchs = string.match(/(\s?)(.+)(;?\s?)/);
 		var str = string.trim();
-		if ( ! quoted(str) && ! keyword(str) && !dimension(str) ) {
+		if ( ! quoted(str) && ((!keyword(str) && !dimension(str)) || hasSpace(str)) ) {
 			str = str.replace(/(.+)(;?)/g, '"$1"$2');
 			// str = '"'+ str + '"';
 			if (matchs) {
@@ -118,4 +118,7 @@ function keyword (string) {
 }
 function dimension (string) {
 	return /^([+-]?\d*\.?\d+)(%|[a-z]+)?/.test(string);
+}
+function hasSpace (string) {
+	return string.trim().indexOf(' ') > 0;
 }
