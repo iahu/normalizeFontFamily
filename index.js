@@ -27,7 +27,7 @@ var replacements = [
 		}
 	},
 	{
-		search: /(filter\s?:)([^;!}]+)?/g,
+		search: /((?:-ms-)?filter\s?:)([^;!}]+)?/g,
 		replace: function (a, b, c) {
 			var value = b;
 			var r = c.replace(/[^'"](#[A-Fa-f0-9]{8})[^'"]/g, function (d,e) {
@@ -62,7 +62,6 @@ argvs.forEach(function(path){
 	deepDir(path, {
 		filters: {
 			'.css' : cssFilter,
-			'.scss': cssFilter,
 			'.less': cssFilter
 		},
 		depth: depth

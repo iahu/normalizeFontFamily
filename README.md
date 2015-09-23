@@ -1,18 +1,15 @@
-## 功能
-less在使用中文或带空格的字体名时没加引号时，less编译器会报错。
+## 说明
+less在使用某此值没加引号时，less编译器会报错。在编写写less时最好直接加上引号。
 
-这是一个基于node做的批量给less/scss/css文件中文字体名添加引号的工具。
+比如：
 
-示例：
+ - 非ascii字符作为字体名
+ - 字体中包含空格
+ - ie filter 中 startColorStr 等的颜色值(格式是: #AARRGGBB)
 
-input
-```css
-body {font-family:宋体, \5fae\8f6f\96c5\9ed1, Helvetica Neue, arial}
-```
-output
-```css
-body {font-family:"宋体", "\5fae\8f6f\96c5\9ed1", "Helvetica Neue", arial}
-```
+__ 在编写less/css时最好手工加上引号。 __
+如果有很多文件存在这种问题可以使用本 __ cli __ 工具。
+
 
 ## 安装方法
 npm install normalize-font-family -g
@@ -28,3 +25,23 @@ npm install normalize-font-family -g
 遍历某文件夹：`nff .`
 
 指定遍历层级：`nff . 2`
+
+
+## 示例
+
+input
+```css
+body {
+	font-family:宋体, \5fae\8f6f\96c5\9ed1, Helvetica Neue, arial, san-serif;
+	-ms-filter: progid:DXImageTransform.Microsoft.Gradient(startColorStr=#aa000000,endColorStr=#aaff0000);
+	filter: progid:DXImageTransform.Microsoft.Gradient(startColorStr=#aa000000,endColorStr=#aaff0000);
+}
+```
+output
+```css
+body {
+	font-family:"宋体", "\5fae\8f6f\96c5\9ed1", "Helvetica Neue", arial, san-serif;
+	-ms-filter: progid:DXImageTransform.Microsoft.Gradient(startColorStr="#aa000000",endColorStr="#aaff0000");
+	filter: progid:DXImageTransform.Microsoft.Gradient(startColorStr="#aa000000",endColorStr="#aaff0000");
+}
+```
