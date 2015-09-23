@@ -3,7 +3,7 @@
   "bin": {
     "nff": "./index.js"
   },
-  "version": "1.1.10",
+  "version": "1.1.11",
   "description": "normalize font-family value. Build to fix less parse error",
   "main": "index.js",
   "scripts": {
