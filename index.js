@@ -25,6 +25,16 @@ var replacements = [
 			arr.push(ff);
 			return b + c + arr.join(' ');
 		}
+	},
+	{
+		search: /(filter\s?:)([^;!}]+)?/g,
+		replace: function (a, b, c) {
+			var value = b;
+			var r = c.replace(/[^'"](#[A-Fa-f0-9]{8})[^'"]/g, function (d,e) {
+				return [d.substr(0, 1), '"',e, '"',d.substr(-1)].join('');
+			});
+			return b + r;
+		}
 	}
 ];
 if (argvs.length === 0) {
