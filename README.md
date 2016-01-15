@@ -1,3 +1,5 @@
+**replaced with [postcss-font-normalize](https://github.com/iahu/postcss-font-normalize)**
+
 ## 说明
 less在使用某此值没加引号时，less编译器会报错。在编写写less时最好直接加上引号。
 
